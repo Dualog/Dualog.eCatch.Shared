@@ -36,6 +36,8 @@ namespace Dualog.eCatch.Shared.Messages
         /// PD and PT - Date and time for arrival, in UTC
         /// </summary>
         public DateTime ArrivalDateTime { get; }
+        public string CurrentLatitude { get; }
+        public string CurrentLongitude { get; }
 
         public string FishingLicense { get; }
 
@@ -48,6 +50,8 @@ namespace Dualog.eCatch.Shared.Messages
             string deliveryFacility, 
             string skipperName, 
             Ship ship,
+            string currentLatitude,
+            string currentLongitude,
             string cancelCode = "",
             string fishingLicense = "") : base(MessageType.POR, sent, skipperName, ship, errorCode: cancelCode)
         {
@@ -57,6 +61,8 @@ namespace Dualog.eCatch.Shared.Messages
             DeliveryFacility = deliveryFacility;
             ArrivalDateTime = arrivalDateTime;
             FishingLicense = fishingLicense;
+            CurrentLatitude = currentLatitude;
+            CurrentLongitude = currentLongitude;
 
             if (FishToDeliver.Count > 0)
             {
@@ -74,6 +80,8 @@ namespace Dualog.eCatch.Shared.Messages
         protected override void WriteBody(StringBuilder sb)
         {
             sb.Append($"//PO/{ArrivalHarbourCode}");
+            // DL Date delivering
+            // HL Time delivering
             sb.Append($"//PD/{ArrivalDateTime.ToFormattedDate()}");
             sb.Append($"//PT/{ArrivalDateTime.ToFormattedTime()}");
             sb.Append($"//OB/{FishOnBoard.ToNAF()}");
@@ -83,6 +91,9 @@ namespace Dualog.eCatch.Shared.Messages
                 sb.Append($"//LS/{DeliveryFacility}");
                 sb.Append($"//KG/{FishToDeliver.ToNAF()}");
             }
+
+            sb.Append($"//XT/{CurrentLatitude}");
+            sb.Append($"//XG/{CurrentLongitude}");
 
             if (!FishingLicense.IsNullOrEmpty())
             {
@@ -96,7 +107,7 @@ namespace Dualog.eCatch.Shared.Messages
 
             result.Add("ArrivalAt".Translate(lang), $"{ArrivalHarbourCode.ToHarbourName()}, {ArrivalDateTime:dd.MM.yyyy HH:mm} UTC");
             result.Add("FishOnBoard".Translate(lang), FishOnBoard.ToDetailedWeightAndFishNameSummary(lang));
-
+            result.Add("Position".Translate(lang), $"Lat: {CurrentLatitude}, Lon: {CurrentLongitude}");
             if (FishToDeliver.Count > 0)
             {
                 result.Add("DeliveringTo".Translate(lang), $"{DeliveryFacility}, {FishToDeliver.ToDetailedWeightAndFishNameSummary(lang)}");
@@ -124,6 +135,8 @@ namespace Dualog.eCatch.Shared.Messages
                     values.ContainsKey("NA") ? values["NA"] : string.Empty, 
                     values["RC"],
                     values.ContainsKey("XR") ? values["XR"] : string.Empty),
+                values.ContainsKey("XT") ? values["XT"] : string.Empty,
+                values.ContainsKey("XG") ? values["XG"] : string.Empty,
                 values.ContainsKey("RE") ? values["RE"] : string.Empty,
                 fishingLicense: values.ContainsKey("FL") ? values["FL"] : string.Empty)
             {

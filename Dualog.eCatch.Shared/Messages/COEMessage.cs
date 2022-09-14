@@ -58,35 +58,35 @@ namespace Dualog.eCatch.Shared.Messages
         protected override void WriteBody(StringBuilder sb)
         {
             sb.Append($"//OB/{FishOnBoard.ToNAF()}");
-            if (MessageFieldChecker.Coe.XtXg(ForwardTo))
+            
+            if (ForwardTo == Constants.Zones.NEAFC)
+            {
+                sb.Append($"//LA/{CurrentLatitude}");
+                sb.Append($"//LO/{CurrentLongitude}");
+            }
+            else
             {
                 sb.Append($"//XT/{CurrentLatitude}");
                 sb.Append($"//XG/{CurrentLongitude}");
             }
+            
             if (MessageFieldChecker.Coe.Ra(ForwardTo))
             {
                 sb.Append($"//RA/{CatchArea}");
             }
             sb.Append($"//PD/{FishStart.ToFormattedDate()}");
             sb.Append($"//PT/{FishStart.ToFormattedTime()}");
-            if (MessageFieldChecker.ZoneUsesFormat.LtLg(ForwardTo))
-            {
-                sb.Append($"//LT/{FishStartLatitude}");
-                sb.Append($"//LG/{FishStartLongitude}");
-            }
-            else if (MessageFieldChecker.ZoneUsesFormat.LaLo(ForwardTo))
-            {
-                //NEAFC Uses the LA/LO as current position and not fish start...
-                if (ForwardTo == Constants.Zones.NEAFC)
+            
+            if(ForwardTo != Constants.Zones.NEAFC){
+                if (MessageFieldChecker.ZoneUsesFormat.LtLg(ForwardTo))
                 {
-                    sb.Append($"//LA/{CurrentLatitude}");
-                    sb.Append($"//LO/{CurrentLongitude}");
+                    sb.Append($"//LT/{FishStartLatitude}");
+                    sb.Append($"//LG/{FishStartLongitude}");
                 }
-                else
+                else if (MessageFieldChecker.ZoneUsesFormat.LaLo(ForwardTo))
                 {
                     sb.Append($"//LA/{FishStartLatitude}");
                     sb.Append($"//LO/{FishStartLongitude}");
-
                 }
             }
             if (ForwardTo == Constants.Zones.Russia)
@@ -96,7 +96,6 @@ namespace Dualog.eCatch.Shared.Messages
                 sb.Append($"//ZA/{CrossBorderLatitude}");
                 sb.Append($"//ZG/{CrossBorderLongitude}");
             }
-
             if (MessageFieldChecker.Coe.Ds(ForwardTo))
             {
                 sb.Append($"//DS/{TargetSpecies}");
@@ -150,7 +149,7 @@ namespace Dualog.eCatch.Shared.Messages
             var fishStartLon = "";
             var currentLat = "";
             var currentLon = "";
-            if (MessageFieldChecker.Coe.XtXg(forwardTo) && values.ContainsKey("XT") && values.ContainsKey("XG"))
+            if (forwardTo != Constants.Zones.NEAFC && values.ContainsKey("XT") && values.ContainsKey("XG"))
             {
                 currentLat = values["XT"];
                 currentLon = values["XG"];

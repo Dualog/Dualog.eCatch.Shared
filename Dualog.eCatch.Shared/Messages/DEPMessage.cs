@@ -20,6 +20,8 @@ namespace Dualog.eCatch.Shared.Messages
 		public IReadOnlyList<FishFAOAndWeight> FishOnBoard { get; }
         public string Tool { get; }
         public string FishingLicense { get; }
+        public string CurrentLatitude { get; }
+        public string CurrentLongitude { get; }
 
 		public DEPMessage(
                         DateTime sent,
@@ -33,6 +35,8 @@ namespace Dualog.eCatch.Shared.Messages
 			            IReadOnlyList<FishFAOAndWeight> fishOnBoard,
                         string skipperName,
                         Ship ship,
+                        string currentLatitude,
+                        string currentLongitude,
                         string cancelCode = "",
                         string tool = "",
                         string fishingLicense = "") : base(MessageType.DEP, sent, skipperName, ship, errorCode: cancelCode)
@@ -47,6 +51,8 @@ namespace Dualog.eCatch.Shared.Messages
 			FishOnBoard = fishOnBoard;
 		    Tool = tool;
             FishingLicense = fishingLicense;
+            CurrentLatitude = currentLatitude;
+            CurrentLongitude = CurrentLongitude;
         }
 
         protected override void WriteBody(StringBuilder sb)
@@ -54,21 +60,19 @@ namespace Dualog.eCatch.Shared.Messages
             sb.Append($"//PO/{DepartureHarbourCode}");
             sb.Append($"//ZD/{DepartureDateTime.ToFormattedDate()}");
             sb.Append($"//ZT/{DepartureDateTime.ToFormattedTime()}");
+            sb.Append($"//OB/{FishOnBoard.ToNAF()}");
             sb.Append($"//PD/{ArrivalDateTime.ToFormattedDate()}");
             sb.Append($"//PT/{ArrivalDateTime.ToFormattedTime()}");
             sb.Append($"//LA/{Latitude}");
             sb.Append($"//LO/{Longitude}");
             sb.Append($"//AC/{FishingActivity}");
             sb.Append($"//DS/{TargetFishSpeciesCode}");
-            sb.Append($"//OB/{FishOnBoard.ToNAF()}");
-            if (!string.IsNullOrEmpty(Tool))
-            {
-                sb.Append($"//GE/{Tool}");
-            }
             if (!FishingLicense.IsNullOrEmpty())
             {
                 sb.Append($"//FL/{FishingLicense}");
             }
+            sb.Append($"//XT/{CurrentLatitude}");
+            sb.Append($"//XG/{CurrentLongitude}");
         }
 
         public Dictionary<string, string> GetSummaryForDictionary(EcatchLangauge lang, string arrivalInfo)
@@ -83,6 +87,10 @@ namespace Dualog.eCatch.Shared.Messages
             if (!FishingLicense.IsNullOrEmpty())
             {
                 result.Add("FishingLicense".Translate(lang), FishingLicense);
+            }
+            if (!string.IsNullOrEmpty(CurrentLatitude) && !string.IsNullOrEmpty(CurrentLongitude))
+            {
+                result.Add("Position".Translate(lang), $"Lat: {CurrentLatitude}, Lon: {CurrentLongitude}");
             }
 
             return result;
@@ -110,8 +118,9 @@ namespace Dualog.eCatch.Shared.Messages
                     values.ContainsKey("NA") ? values["NA"] : string.Empty,
                     values["RC"],
                     values.ContainsKey("XR") ? values["XR"] : string.Empty),
+                values.ContainsKey("XT") ? values["XT"] : string.Empty,
+                values.ContainsKey("XG") ? values["XG"] : string.Empty,
                 values.ContainsKey("RE") ? values["RE"] : string.Empty,
-                values.ContainsKey("GE") ? values["GE"] : string.Empty,
                 fishingLicense: values.ContainsKey("FL") ? values["FL"] : string.Empty)
             {
                 Id = id,
