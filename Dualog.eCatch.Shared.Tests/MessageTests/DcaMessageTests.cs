@@ -105,10 +105,10 @@ namespace Dualog.eCatch.Shared.Tests.MessageTests
                 new FishFAOAndWeight[0], 0, 0, 0, "", "", new[]{ unintendedCatch });
 
             var dca1 = new DCAMessage("", "", "NOTOS", new Haul[] { haul1 }, 
-                new DateTime(2018, 10, 16, 15, 3, 30), "Skipper", _ship);
+                new DateTime(2018, 10, 16, 15, 3, 30), "Skipper", _ship, currentLatitude: "1.0", currentLongitude: "002.000");
 
             dca1.ToString().Should().BeEquivalentTo("//SR//TM/DCA//RN/0//MV/1//AD/NOR//RC/RC1//NA/Ship1//XR/REG1" +
-                                                 "//MA/Skipper//DA/20181016//TI/1503//QI///AC///PO/NOTOS//TS//" +
+                                                 "//MA/Skipper//DA/20181016//TI/1503//QI///AC///PO/NOTOS//XT/1.0//XG/002.000//TS//" +
                                                  "BD/20181016//BT/1503//ZO///LT/00.000//LG/000.000//GE///GP///" +
                                                  "XT/00.000//XG/000.000//DU/0//CA/EGF 3//ER//");
 
@@ -116,10 +116,10 @@ namespace Dualog.eCatch.Shared.Tests.MessageTests
                 , 0, 0, 0, 0, "", "", new FishFAOAndWeight[0], 0, 0, 0, "", "",
                 new[] { unintendedCatch, unintendedCatch2 });
             var dca2 = new DCAMessage("", "", "NOTOS", new Haul[] { haul2 }, 
-                new DateTime(2018, 10, 16, 15, 3, 30), "Skipper", _ship);
+                new DateTime(2018, 10, 16, 15, 3, 30), "Skipper", _ship, currentLatitude: "1.0", currentLongitude: "002.000");
             
             dca2.ToString().Should().BeEquivalentTo("//SR//TM/DCA//RN/0//MV/1//AD/NOR//RC/RC1//NA/Ship1//XR/REG1" +
-                                                 "//MA/Skipper//DA/20181016//TI/1503//QI///AC///PO/NOTOS//TS//" +
+                                                 "//MA/Skipper//DA/20181016//TI/1503//QI///AC///PO/NOTOS//XT/1.0//XG/002.000//TS//" +
                                                  "BD/20181016//BT/1503//ZO///LT/00.000//LG/000.000//GE///GP///" +
                                                  "XT/00.000//XG/000.000//DU/0//CA/EGF 3 SXX 3//ER//");
         }
