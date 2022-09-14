@@ -22,9 +22,9 @@ namespace Dualog.eCatch.Shared
             {
                 Constants.Zones.EU,
                 Constants.Zones.FaroeIslands,
+                Constants.Zones.GBR,
                 Constants.Zones.Island,
                 Constants.Zones.Russia,
-                Constants.Zones.GBR
             };
             private static readonly string[] ZonesUsingLaLo =
             {
@@ -60,6 +60,27 @@ namespace Dualog.eCatch.Shared
             /// <param name="forwardTo"></param>
             /// <returns></returns>
             public static bool Ra(string forwardTo) => forwardTo != Constants.Zones.Russia;
+        }
+
+        public static class Cox
+        {
+            public static bool ShouldHaveOB(string currentZone) => 
+                currentZone == Constants.Zones.Island
+                || currentZone == Constants.Zones.FaroeIslands
+                || currentZone == Constants.Zones.Norway
+                || currentZone == Constants.Zones.Skagerrak
+                || currentZone == Constants.Zones.Svalbard
+                || currentZone == Constants.Zones.SvalbardTerritorialWaters;
+
+             public static bool ShouldHaveCurrentPosition(string currentZone) => 
+                currentZone == Constants.Zones.Norway
+                || currentZone == Constants.Zones.Skagerrak
+                || currentZone == Constants.Zones.Svalbard
+                || currentZone == Constants.Zones.SvalbardTerritorialWaters
+                || currentZone == Constants.Zones.GBR
+                || currentZone == Constants.Zones.EU
+                || currentZone == Constants.Zones.Island
+                || currentZone == Constants.Zones.FaroeIslands;
         }
     }
 }

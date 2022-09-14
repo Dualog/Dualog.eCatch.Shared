@@ -17,6 +17,8 @@ namespace Dualog.eCatch.Shared.Messages
         public string ArrivalHarbour { get; }
         public string PumpingFromBoat { get; }
         public string FishingLicense { get; }
+        public string CurrentLatitude { get; }
+        public string CurrentLongitude { get; }
 
         public DCAMessage(
             string fishingPermission, 
@@ -29,7 +31,9 @@ namespace Dualog.eCatch.Shared.Messages
             int messageVersion = 1,
             string correctionCode = "",
             string pumpingFromBoat = "",
-            string fishingLicense = "") : base(MessageType.DCA, sent, skipperName, ship, errorCode: correctionCode, messageVersion: messageVersion)
+            string fishingLicense = "",
+            string currentLatitude = "",
+            string currentLongitude = "") : base(MessageType.DCA, sent, skipperName, ship, errorCode: correctionCode, messageVersion: messageVersion)
         {
             this.FishingPermission = fishingPermission;
             this.FishingActivity = fishingActivity;
@@ -37,6 +41,8 @@ namespace Dualog.eCatch.Shared.Messages
             Hauls = hauls;
             PumpingFromBoat = pumpingFromBoat;
             FishingLicense = fishingLicense;
+            CurrentLatitude = currentLatitude;
+            CurrentLongitude = currentLongitude;
         }
 
 		public IReadOnlyList<FishFAOAndWeight> GetFishAndWeights()
@@ -56,6 +62,10 @@ namespace Dualog.eCatch.Shared.Messages
             {
                 sb.Append($"//FL/{FishingLicense}");
             }
+
+            sb.Append($"//XT/{CurrentLatitude}");
+            sb.Append($"//XG/{CurrentLongitude}");
+
             Hauls.ForEach(c => WriteHaul(sb, c));
         }
 
@@ -80,6 +90,9 @@ namespace Dualog.eCatch.Shared.Messages
             {
                 result.Add("FishingLicense".Translate(lang), FishingLicense);
             }
+            if(!string.IsNullOrEmpty(CurrentLatitude) && !string.IsNullOrEmpty(CurrentLongitude)){
+                result.Add("CurrentPosition".Translate(lang), $"Lat: {CurrentLatitude}, Lon: {CurrentLongitude}");
+            }
             return result;
         }
 
@@ -89,6 +102,7 @@ namespace Dualog.eCatch.Shared.Messages
             var startLon = haul.StartLongitude.ToWgs84Format(CoordinateType.Longitude);
             var stopLat = haul.StopLatitude.ToWgs84Format(CoordinateType.Latitude);
             var stopLon = haul.StopLongitude.ToWgs84Format(CoordinateType.Longitude);
+
             sb.Append("//TS");
             sb.Append($"//BD/{haul.StartTime.ToFormattedDate()}");
             sb.Append($"//BT/{haul.StartTime.ToFormattedTime()}");
@@ -96,17 +110,27 @@ namespace Dualog.eCatch.Shared.Messages
             sb.Append($"//LT/{startLat}");
             sb.Append($"//LG/{startLon}");
             sb.Append($"//GE/{haul.Tool}");
+            
+            if (haul.MaskWidth > 0)
+            {
+                sb.Append($"//ME/{haul.MaskWidth}");
+            }
+
+            if (haul.NumberOfTrawls > 0)
+            {
+                sb.Append($"//GS/{haul.NumberOfTrawls}");
+            }
+            
+            if (haul.ExtraToolInfo > 0)
+            {
+                sb.Append($"//FO/{haul.ExtraToolInfo}");
+            }
+            //GO?
             sb.Append($"//GP/{haul.Problem}");
             sb.Append($"//XT/{stopLat}");
             sb.Append($"//XG/{stopLon}");
             sb.Append($"//DU/{haul.GetDuration()}");
-
-
-            if (!haul.HerringType.IsNullOrEmpty())
-            {
-                sb.Append($"//SS/{haul.HerringType}");
-            }
-
+            
             sb.Append($"//CA/{haul.FishDistribution.ToNAF()}");
             if (haul.AnimalCount.Any())
             {
@@ -119,27 +143,17 @@ namespace Dualog.eCatch.Shared.Messages
                     sb.Append(haul.AnimalCount.ToNAF());
                 }
             }
-
-            if (haul.MaskWidth > 0)
+            
+            if (!haul.HerringType.IsNullOrEmpty())
             {
-                sb.Append($"//ME/{haul.MaskWidth}");
+                sb.Append($"//SS/{haul.HerringType}");
             }
-
-            if (haul.NumberOfTrawls > 0)
-            {
-                sb.Append($"//GS/{haul.NumberOfTrawls}");
-            }
-
-            if (haul.ExtraToolInfo > 0)
-            {
-                sb.Append($"//FO/{haul.ExtraToolInfo}");
-            }
-
+            
             if (FishingActivity.Equals("REL") && !PumpingFromBoat.IsNullOrEmpty())
             {
                 sb.Append($"//TF/{PumpingFromBoat}");
             }
-
+            
             if (!FishingLicense.IsNullOrEmpty())
             {
                 sb.Append($"//FL/{FishingLicense}");
@@ -187,7 +201,9 @@ namespace Dualog.eCatch.Shared.Messages
                 Convert.ToInt32(values.ContainsKey("MV") ? values["MV"] : "0"),
                 values.ContainsKey("RE") ? values["RE"] : string.Empty,
                 pumpingFrom,
-                fishingLicense: values.ContainsKey("FL") ? values["FL"] : string.Empty)
+                fishingLicense: values.ContainsKey("FL") ? values["FL"] : string.Empty,
+                currentLatitude: values.ContainsKey("XT") ? values["XT"] : string.Empty,
+                currentLongitude: values.ContainsKey("XG") ? values["XG"] : string.Empty)
             {
                 Id = id,
                 ForwardTo = values.ContainsKey("FT") ? values["FT"] : string.Empty,

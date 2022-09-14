@@ -33,10 +33,10 @@ namespace Dualog.eCatch.Shared.Messages
         {
             sb.Append("//TS");
             sb.Append($"//SN/{fishLanding.FishSpecies}");
-            sb.Append($"//EZ/{fishLanding.Zone}");
             sb.Append($"//RA/{fishLanding.CatchArea}");
-            sb.Append($"//NE/{fishLanding.Weight}");
+            sb.Append($"//EZ/{fishLanding.Zone}");
             sb.Append($"//PS/{fishLanding.Conservation}");
+            sb.Append($"//NE/{fishLanding.Weight}");
             sb.Append($"//PR/{fishLanding.Condition}");
             sb.Append($"//TY/{fishLanding.UnitType}");
             sb.Append($"//NU/{fishLanding.NumberOfUnits}");

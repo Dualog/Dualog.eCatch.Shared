@@ -18,6 +18,8 @@ namespace Dualog.eCatch.Shared.Messages
         public string RadioCallSignalForOtherParty { get; }
         public string HarbourCode { get; }
         public string FishingLicense { get; }
+        public string CurrentLatitude { get; }
+        public string CurrentLongitude { get; }
 
         public TRAMessage(
             DateTime sent, 
@@ -30,6 +32,8 @@ namespace Dualog.eCatch.Shared.Messages
             string radioCallSignalForOtherParty,
             string skipperName,
             Ship ship,
+            string currentLat,
+            string currentLon,
             string cancelCode = "",
             string harbourCode = "",
             string fishingLicense = "") : base(MessageType.TRA, sent, skipperName, ship, errorCode:cancelCode)
@@ -43,6 +47,8 @@ namespace Dualog.eCatch.Shared.Messages
             RadioCallSignalForOtherParty = radioCallSignalForOtherParty;
             HarbourCode = harbourCode;
             FishingLicense = fishingLicense;
+            CurrentLatitude = currentLat;
+            CurrentLongitude = currentLon;
         }
 
         protected override void WriteBody(StringBuilder sb)
@@ -56,6 +62,8 @@ namespace Dualog.eCatch.Shared.Messages
             {
                 sb.Append($"//LA/{Latitude}");
                 sb.Append($"//LO/{Longitude}");
+                sb.Append($"//XT/{CurrentLatitude}");
+                sb.Append($"//XG/{CurrentLongitude}");
             }
             sb.Append($"//OB/{FishOnBoard.ToNAF()}");
             sb.Append($"//KG/{TransferedFish.ToNAF()}");
@@ -85,6 +93,10 @@ namespace Dualog.eCatch.Shared.Messages
                     : "TransferedTo".Translate(lang), $"{RadioCallSignalForOtherParty} {ReloadDateTime:dd.MM.yyyy HH:mm}");
             result.Add("TransferedFish".Translate(lang), TransferedFish.ToDetailedWeightAndFishNameSummary(lang));
             result.Add("FishOnBoard".Translate(lang), FishOnBoard.ToDetailedWeightAndFishNameSummary(lang));
+            if(!CurrentLatitude.IsNullOrEmpty() && !CurrentLongitude.IsNullOrEmpty())
+            {
+                result.Add("Position".Translate(lang), $"Lat: {CurrentLatitude}, Lon: {CurrentLongitude}");
+            }
             if (!HarbourCode.IsNullOrEmpty())
             {
                 result.Add("Harbour".Translate(lang), HarbourCode);
@@ -100,6 +112,8 @@ namespace Dualog.eCatch.Shared.Messages
         {
             var lat = "";
             var lon = "";
+            var currentLat = "";
+            var currentLon = "";
             if (values.ContainsKey("LA"))
             {
                 lat = values["LA"];
@@ -115,6 +129,11 @@ namespace Dualog.eCatch.Shared.Messages
             if (values.ContainsKey("LG"))
             {
                 lon = values["LG"];
+            }
+            if(values.ContainsKey("XT") && values.ContainsKey("XG"))
+            {
+                currentLat = values["XT"];
+                currentLon = values["XG"];
             }
             //TT is set if the boat is delivering to another boat
             ReloadingPurpose purpose = values.ContainsKey("TT")
@@ -134,6 +153,8 @@ namespace Dualog.eCatch.Shared.Messages
                     values.ContainsKey("NA") ? values["NA"] : string.Empty,
                     values["RC"],
                     values.ContainsKey("XR") ? values["XR"] : string.Empty),
+                !currentLat.IsNullOrEmpty() ? currentLat : string.Empty,
+                !currentLon.IsNullOrEmpty() ? currentLon : string.Empty,
                 values.ContainsKey("RE") ? values["RE"] : string.Empty,
                 values.ContainsKey("PO") ? values["PO"] : string.Empty,
                 fishingLicense: values.ContainsKey("FL") ? values["FL"] : string.Empty)

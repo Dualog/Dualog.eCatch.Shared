@@ -20,6 +20,8 @@ namespace Dualog.eCatch.Shared.Messages
         public IReadOnlyList<FishFAOAndWeight> CatchDiscarded { get; }
         public int DaysFishing { get; }
         public string FishingLicense { get; }
+        public string CurrentLatitude { get; }
+        public string CurrentLongitude { get; }
 
         public COXMessage(
             DateTime sent,
@@ -34,7 +36,10 @@ namespace Dualog.eCatch.Shared.Messages
             string catchArea = "",
             string errorCode = "",
             string fishingLicense = "",
-            IReadOnlyList<FishFAOAndWeight> catchDiscarded = null) : base(MessageType.COX, sent, skipperName, ship, errorCode)
+            string currentLatitude = "",
+            string currentLongitude = "",
+            IReadOnlyList<FishFAOAndWeight> catchDiscarded = null
+            ) : base(MessageType.COX, sent, skipperName, ship, errorCode)
         {
             Zone = zone;
             DeliveryHarbour = deliveryHarbour;
@@ -45,6 +50,8 @@ namespace Dualog.eCatch.Shared.Messages
             PositionAndTime = positionAndTime;
             DaysFishing = daysFishing;
             FishingLicense = fishingLicense;
+            CurrentLatitude = currentLatitude;
+            CurrentLongitude = currentLongitude;
         }
 
         protected override void WriteBody(StringBuilder sb)
@@ -53,22 +60,35 @@ namespace Dualog.eCatch.Shared.Messages
             {
                 sb.Append($"//PO/{DeliveryHarbour}");
             }
-            if (Zone == Constants.Zones.NEAFC)
+            
+            if (MessageFieldChecker.Cox.ShouldHaveOB(Zone))
+            {
+                sb.Append($"//OB/{CatchOnBoard.ToNAF()}");
+            }
+
+            if(Zone == Constants.Zones.NEAFC)
+            {
+                sb.Append($"//CA/{CatchSummarized.ToNAF()}");
+                sb.Append($"//DF/{DaysFishing}");
+            }
+
+            if(!string.IsNullOrEmpty(CatchArea))
             {
                 sb.Append($"//RA/{CatchArea}");
-                sb.Append($"//DF/{DaysFishing}");
-                sb.Append($"//CA/{CatchSummarized.ToNAF()}");
             }
+
+            if(MessageFieldChecker.Cox.ShouldHaveCurrentPosition(Zone))
+            {
+                sb.Append($"//XT/{CurrentLatitude}");
+                sb.Append($"//XG/{CurrentLongitude}");
+            }
+
             if (Zone == Constants.Zones.Russia)
             {
                 sb.Append($"//ZD/{PositionAndTime.DateTime.ToFormattedDate()}");
                 sb.Append($"//ZT/{PositionAndTime.DateTime.ToFormattedTime()}");
                 sb.Append($"//ZA/{PositionAndTime.Latitude.ToWgs84Format(CoordinateType.Latitude)}");
                 sb.Append($"//ZG/{PositionAndTime.Longitude.ToWgs84Format(CoordinateType.Longitude)}");
-            }
-            if (Zone == Constants.Zones.Russia || Zone == Constants.Zones.Island || Zone == Constants.Zones.FaroeIslands)
-            {
-                sb.Append($"//OB/{CatchOnBoard.ToNAF()}");
             }
             if (CatchDiscarded != null && CatchDiscarded.Count > 0)
             {
@@ -111,6 +131,11 @@ namespace Dualog.eCatch.Shared.Messages
                 result.Add("FishingLicense".Translate(lang), FishingLicense);
             }
 
+            if (!string.IsNullOrEmpty(CurrentLatitude) && !string.IsNullOrEmpty(CurrentLongitude))
+            {
+                result.Add("Position".Translate(lang), $"Lat: {CurrentLatitude}, Lon: {CurrentLongitude}");
+            }
+
             return result;
         }
 
@@ -132,6 +157,8 @@ namespace Dualog.eCatch.Shared.Messages
                 values.ContainsKey("RA") ? values["RA"] : string.Empty,
                 values.ContainsKey("RE") ? values["RE"] : string.Empty,
                 fishingLicense: values.ContainsKey("FL") ? values["FL"] : string.Empty,
+                currentLatitude: values.ContainsKey("XT") ? values["XT"] : string.Empty,
+                currentLongitude: values.ContainsKey("XG") ? values["XG"] : string.Empty,
                 catchDiscarded: values.ContainsKey("RJ") ? MessageParsing.ParseFishWeights(values["RJ"]) : new List<FishFAOAndWeight>())
             {
                 Id = id,
