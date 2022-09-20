@@ -52,7 +52,7 @@ namespace Dualog.eCatch.Shared.Messages
 		    Tool = tool;
             FishingLicense = fishingLicense;
             CurrentLatitude = currentLatitude;
-            CurrentLongitude = CurrentLongitude;
+            CurrentLongitude = currentLongitude;
         }
 
         protected override void WriteBody(StringBuilder sb)

@@ -36,6 +36,7 @@ namespace Dualog.eCatch.Shared.Messages
         /// PD and PT - Date and time for arrival, in UTC
         /// </summary>
         public DateTime ArrivalDateTime { get; }
+        public DateTime? LandingDateTime { get; }
         public string CurrentLatitude { get; }
         public string CurrentLongitude { get; }
 
@@ -47,7 +48,8 @@ namespace Dualog.eCatch.Shared.Messages
             DateTime arrivalDateTime,
             IReadOnlyList<FishFAOAndWeight> fishOnBoard,
             IReadOnlyList<FishFAOAndWeight> fishToDeliver,
-            string deliveryFacility, 
+            string deliveryFacility,
+            DateTime? landingDateTime,
             string skipperName, 
             Ship ship,
             string currentLatitude,
@@ -60,6 +62,7 @@ namespace Dualog.eCatch.Shared.Messages
             FishToDeliver = fishToDeliver;
             DeliveryFacility = deliveryFacility;
             ArrivalDateTime = arrivalDateTime;
+            LandingDateTime = landingDateTime;
             FishingLicense = fishingLicense;
             CurrentLatitude = currentLatitude;
             CurrentLongitude = currentLongitude;
@@ -80,8 +83,6 @@ namespace Dualog.eCatch.Shared.Messages
         protected override void WriteBody(StringBuilder sb)
         {
             sb.Append($"//PO/{ArrivalHarbourCode}");
-            // DL Date delivering
-            // HL Time delivering
             sb.Append($"//PD/{ArrivalDateTime.ToFormattedDate()}");
             sb.Append($"//PT/{ArrivalDateTime.ToFormattedTime()}");
             sb.Append($"//OB/{FishOnBoard.ToNAF()}");
@@ -89,6 +90,8 @@ namespace Dualog.eCatch.Shared.Messages
             if (FishToDeliver.Count > 0)
             {
                 sb.Append($"//LS/{DeliveryFacility}");
+                sb.Append($"//DL/{LandingDateTime?.ToFormattedDate()}");
+                sb.Append($"//HL/{LandingDateTime?.ToFormattedTime()}");
                 sb.Append($"//KG/{FishToDeliver.ToNAF()}");
             }
 
@@ -106,6 +109,7 @@ namespace Dualog.eCatch.Shared.Messages
             var result = CreateBaseSummaryDictionary(lang);
 
             result.Add("ArrivalAt".Translate(lang), $"{ArrivalHarbourCode.ToHarbourName()}, {ArrivalDateTime:dd.MM.yyyy HH:mm} UTC");
+            result.Add("LandingAt".Translate(lang), $"{DeliveryFacility}, {LandingDateTime:dd.MM.yyyy HH:mm} UTC");
             result.Add("FishOnBoard".Translate(lang), FishOnBoard.ToDetailedWeightAndFishNameSummary(lang));
             result.Add("Position".Translate(lang), $"Lat: {CurrentLatitude}, Lon: {CurrentLongitude}");
             if (FishToDeliver.Count > 0)
@@ -123,6 +127,12 @@ namespace Dualog.eCatch.Shared.Messages
 
         public static PORMessage ParseNAFFormat(int id, DateTime sent, IReadOnlyDictionary<string, string> values)
         {
+            DateTime? landingTime = null;
+            if(values.ContainsKey("DL") && values.ContainsKey("HL"))
+            {
+                landingTime = (values["PD"] + values["PT"]).FromFormattedDateTime();
+            }
+
             return new PORMessage(
                 sent,
                 values["PO"],
@@ -130,6 +140,7 @@ namespace Dualog.eCatch.Shared.Messages
                 MessageParsing.ParseFishWeights(values.ContainsKey("OB") ? values["OB"] : string.Empty),
                 MessageParsing.ParseFishWeights(values.ContainsKey("KG") ? values["KG"] : string.Empty),
                 values.ContainsKey("LS") ? values["LS"] : string.Empty,
+                landingTime,
                 values.ContainsKey("MA") ? values["MA"] : string.Empty,
                 new Ship(
                     values.ContainsKey("NA") ? values["NA"] : string.Empty, 
