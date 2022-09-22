@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.0;netstandard1.1;netstandard1.2;netstandard2.0;netstandard2.1;net471</TargetFrameworks>
     <PackageId>Dualog.eCatch.Shared</PackageId>
-    <PackageVersion>2.0.0.72</PackageVersion>
+    <PackageVersion>2.0.0.73</PackageVersion>
     <Authors>Alexander Hanssen</Authors>
     <Description>Classes and methods used for Dualog native apps and web apps.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
